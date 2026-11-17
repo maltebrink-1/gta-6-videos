@@ -1,0 +1,10 @@
+out/
+_site/
+site/data.json
+__pycache__/
+*.pyc
+.pytest_cache/
+*.tmp.mp4
+*.tmp.m4a
+.venv/
+.DS_Store

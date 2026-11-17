@@ -1,0 +1,2 @@
+# Production voice: Kokoro-82M (Apache-2.0 model) via ONNX Runtime, CPU only
+kokoro-onnx>=0.4

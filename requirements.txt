@@ -1,0 +1,8 @@
+# Core pipeline (all free/open-source)
+numpy>=1.26
+scipy>=1.11
+pillow>=10.0
+opencv-python-headless>=4.8
+PyYAML>=6.0
+requests>=2.31
+pytest>=8.0
