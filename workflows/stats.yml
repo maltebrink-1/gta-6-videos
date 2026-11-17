@@ -1,0 +1,105 @@
+name: Daily stats, report & dashboard
+
+on:
+  schedule:
+    - cron: "43 5 * * *"          # 05:43 UTC every day
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pipeline
+  cancel-in-progress: false
+
+jobs:
+  stats:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      private: ${{ steps.vis.outputs.private }}
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Is this repository private?
+        id: vis
+        run: |
+          private=$(gh api "repos/$GITHUB_REPOSITORY" --jq .private)
+          echo "private=$private" >> "$GITHUB_OUTPUT"
+          if [ "$private" = "true" ]; then echo "PRIVATE_FLAG=--private-repo" >> "$GITHUB_ENV"; fi
+      - uses: ./.github/actions/setup
+        with:
+          voice: "false"
+
+      - name: Collect statistics (skips platforms that aren't connected yet)
+        env:
+          YOUTUBE_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
+          YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
+          YOUTUBE_REFRESH_TOKEN: ${{ secrets.YOUTUBE_REFRESH_TOKEN }}
+          TIKTOK_CLIENT_KEY: ${{ secrets.TIKTOK_CLIENT_KEY }}
+          TIKTOK_CLIENT_SECRET: ${{ secrets.TIKTOK_CLIENT_SECRET }}
+          TIKTOK_REFRESH_TOKEN: ${{ secrets.TIKTOK_REFRESH_TOKEN }}
+        run: python -m shorts stats
+
+      - name: Actions minutes used this month (private repos only)
+        if: steps.vis.outputs.private == 'true'
+        run: |
+          python - <<'PY'
+          import datetime, json, os, subprocess
+          from shorts.usage import Usage
+          month = datetime.date.today().strftime("%Y-%m")
+          repo = os.environ["GITHUB_REPOSITORY"]
+          runs = json.loads(subprocess.check_output(["gh", "api", f"repos/{repo}/actions/runs?per_page=100&created=>={month}-01"]))
+          ms = 0
+          for r in runs.get("workflow_runs", []):
+              t = json.loads(subprocess.check_output(["gh", "api", f"repos/{repo}/actions/runs/{r['id']}/timing"]))
+              ms += sum(v.get("total_ms", 0) for v in t.get("billable", {}).values())
+          u = Usage(); u.set_month("actions_minutes", round(ms / 60000)); u.save()
+          print("billable minutes this month:", round(ms / 60000))
+          PY
+
+      - name: Daily report
+        run: python -m shorts report --save $PRIVATE_FLAG > /tmp/report.md
+
+      - name: Post the report as an issue (closes yesterday's)
+        run: |
+          post=$(python -c "from shorts.config import load_settings as l; print(l()['reports']['post_issue'])")
+          if [ "$post" != "True" ]; then exit 0; fi
+          gh label create daily-report --color 1D76DB --description "Automatic daily report" --force
+          for n in $(gh issue list --label daily-report --state open --json number -q '.[].number'); do
+            gh issue close "$n"
+          done
+          gh issue create --title "Daily report $(date -u +%Y-%m-%d)" --body-file /tmp/report.md --label daily-report
+
+      - name: Build the dashboard
+        run: python -m shorts dashboard --out _site $PRIVATE_FLAG
+
+      - name: Save data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/
+          git diff --cached --quiet && exit 0
+          git commit -m "Stats $(date -u +%Y-%m-%d)"
+          git pull --rebase && git push
+
+      - name: Upload dashboard
+        if: steps.vis.outputs.private != 'true'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: stats
+    if: needs.stats.outputs.private != 'true'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

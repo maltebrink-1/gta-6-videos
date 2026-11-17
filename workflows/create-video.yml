@@ -1,0 +1,126 @@
+name: Create video
+
+# Runs every day in the cloud (your PC can stay off). Makes a video, checks it,
+# and opens a review issue. Publishing only happens in Stage 3 (after you add the
+# "approved" label) or Stage 4 (automatic) – see config/settings.yaml.
+on:
+  schedule:
+    - cron: "17 6 * * *"          # 06:17 UTC every day (07:17 Danish winter time)
+  workflow_dispatch:
+    inputs:
+      count:
+        description: "How many videos to make"
+        default: "1"
+      format:
+        description: "Force a format (countdown, top3, region_spotlight, confirmed_vs_rumor, by_the_numbers, myth_buster, then_vs_now, poll) – leave empty for automatic"
+        default: ""
+
+permissions:
+  contents: write     # commit data/videos.json + usage
+  issues: write       # open the review issue
+
+concurrency:
+  group: pipeline
+  cancel-in-progress: false
+
+jobs:
+  create:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      HAS_CLAUDE: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN != '' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/setup
+
+      - name: Install Claude Code (only if you added CLAUDE_CODE_OAUTH_TOKEN)
+        if: env.HAS_CLAUDE == 'true'
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Check the facts database
+        run: python -m shorts facts
+
+      - name: Make the video(s)
+        id: create
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          COUNT: ${{ inputs.count || '1' }}
+          FORMAT: ${{ inputs.format }}
+        run: |
+          args=(--count "$COUNT" --verbose)
+          if [ -n "$FORMAT" ]; then args+=(--format "$FORMAT"); fi
+          python -m shorts create "${args[@]}"
+
+      - name: Keep the files for 30 days (Artifacts on this run's page)
+        if: steps.create.outputs.videos != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: videos-${{ github.run_id }}
+          path: |
+            out/*/video.mp4
+            out/*/captions.srt
+            out/*/*.json
+            out/*/*.jpg
+          retention-days: 30
+
+      - name: Open a review issue per video
+        if: steps.create.outputs.videos != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VIDEOS: ${{ steps.create.outputs.videos }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          RUN_ID: ${{ github.run_id }}
+          ASSET_BASE: ${{ github.server_url }}/${{ github.repository }}/releases/download/review-queue
+        run: |
+          gh label create video-review --color FBCA04 --description "New video waiting for review" --force
+          gh label create approved --color 0E8A16 --description "Publish this video" --force
+          gh label create rejected --color B60205 --description "Never publish this video" --force
+          gh label create qc-failed --color D93F0B --description "Failed automatic checks" --force
+          gh release view review-queue >/dev/null 2>&1 || \
+            gh release create review-queue --prerelease --title "Review queue" \
+              --notes "Videos waiting for review. Files are removed after they are published or rejected."
+          for id in ${VIDEOS//,/ }; do
+            cp "out/$id/video.mp4" "/tmp/$id.mp4"
+            cp "out/$id/contact_sheet.jpg" "/tmp/$id-contact.jpg"
+            gh release upload review-queue "/tmp/$id.mp4" "/tmp/$id-contact.jpg" --clobber
+            python -m shorts review-body --video-id "$id" --run-url "$RUN_URL" --run-id "$RUN_ID" \
+              --asset-base "$ASSET_BASE" > /tmp/body.md
+            title=$(python -c "import json,sys; print(json.load(open(sys.argv[1]))['title'])" "out/$id/record.json")
+            status=$(python -c "import json,sys; print(json.load(open(sys.argv[1]))['status'])" "out/$id/record.json")
+            labels="video-review"
+            if [ "$status" = "qc_failed" ]; then labels="video-review,qc-failed"; fi
+            gh issue create --title "Review: $title ($id)" --body-file /tmp/body.md --label "$labels"
+          done
+
+      - name: Stage 4 – publish automatically (does nothing before Stage 4)
+        if: steps.create.outputs.passed != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PASSED: ${{ steps.create.outputs.passed }}
+          YOUTUBE_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
+          YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
+          YOUTUBE_REFRESH_TOKEN: ${{ secrets.YOUTUBE_REFRESH_TOKEN }}
+          TIKTOK_CLIENT_KEY: ${{ secrets.TIKTOK_CLIENT_KEY }}
+          TIKTOK_CLIENT_SECRET: ${{ secrets.TIKTOK_CLIENT_SECRET }}
+          TIKTOK_REFRESH_TOKEN: ${{ secrets.TIKTOK_REFRESH_TOKEN }}
+        run: |
+          stage=$(python -c "from shorts.config import load_settings as l; s=l(); print(s['stage'] if not s['publishing']['require_approval'] else 0)")
+          if [ "$stage" != "4" ]; then echo "Not in Stage 4 with require_approval=false – nothing to do."; exit 0; fi
+          for id in ${PASSED//,/ }; do
+            for platform in youtube tiktok; do
+              python -m shorts publish --video-id "$id" --platform "$platform" | tee -a /tmp/publish.log
+            done
+          done
+
+      - name: Save the pipeline's records
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/
+          git diff --cached --quiet && exit 0
+          git commit -m "Pipeline: video run ${{ github.run_id }}"
+          git pull --rebase && git push

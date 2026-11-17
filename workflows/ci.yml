@@ -1,0 +1,24 @@
+name: Tests
+
+on:
+  push:
+    paths: ["shorts/**", "tests/**", "config/**", "data/facts.yaml", "requirements*.txt", ".github/**"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+        with:
+          voice: "false"
+      - name: Validate the facts database
+        run: python -m shorts facts
+      - name: Run tests (includes a short real render with the test voice)
+        run: pytest -q

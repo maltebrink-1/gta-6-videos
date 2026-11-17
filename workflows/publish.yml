@@ -1,0 +1,102 @@
+name: Publish or reject
+
+# Triggered when YOU add the "approved" or "rejected" label to a review issue.
+# The publish gate (shorts/publish/guard.py) still refuses unless settings.yaml
+# says stage >= 3, publishing.enabled: true and the platform is enabled.
+on:
+  issues:
+    types: [labeled]
+
+permissions:
+  contents: write
+  issues: write
+  actions: read       # download the video files from the run that made them
+
+concurrency:
+  group: pipeline
+  cancel-in-progress: false
+
+jobs:
+  decide:
+    if: >-
+      (github.event.label.name == 'approved' || github.event.label.name == 'rejected') &&
+      contains(github.event.issue.labels.*.name, 'video-review') &&
+      github.event.sender.login == github.repository_owner
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      GH_TOKEN: ${{ github.token }}
+      ISSUE: ${{ github.event.issue.number }}
+      LABEL: ${{ github.event.label.name }}
+      ISSUE_BODY: ${{ github.event.issue.body }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read the video id from the issue
+        id: ids
+        run: |
+          printf '%s' "$ISSUE_BODY" > /tmp/body.md
+          vid=$(grep -oE 'video-id: [0-9A-Za-z_-]+' /tmp/body.md | head -1 | cut -d' ' -f2)
+          run=$(grep -oE 'run-id: [0-9]+' /tmp/body.md | head -1 | cut -d' ' -f2)
+          if [ -z "$vid" ]; then echo "No video id in issue"; exit 1; fi
+          echo "video=$vid" >> "$GITHUB_OUTPUT"
+          echo "run=$run" >> "$GITHUB_OUTPUT"
+
+      - uses: ./.github/actions/setup
+        with:
+          voice: "false"
+
+      - name: Rejected – record it and tidy up
+        if: env.LABEL == 'rejected'
+        env:
+          VID: ${{ steps.ids.outputs.video }}
+        run: |
+          python -m shorts mark --video-id "$VID" --status rejected --note "rejected in issue #$ISSUE"
+          gh release delete-asset review-queue "$VID.mp4" -y || true
+          gh release delete-asset review-queue "$VID-contact.jpg" -y || true
+          gh issue comment "$ISSUE" --body "Marked as **rejected** – it will never be published. Thanks for the feedback; comments on this issue help tune future videos."
+          gh issue close "$ISSUE"
+
+      - name: Approved – fetch the files
+        if: env.LABEL == 'approved'
+        uses: actions/download-artifact@v4
+        with:
+          name: videos-${{ steps.ids.outputs.run }}
+          path: out
+          run-id: ${{ steps.ids.outputs.run }}
+          github-token: ${{ github.token }}
+
+      - name: Approved – publish (if the settings allow it)
+        if: env.LABEL == 'approved'
+        env:
+          VID: ${{ steps.ids.outputs.video }}
+          YOUTUBE_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
+          YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
+          YOUTUBE_REFRESH_TOKEN: ${{ secrets.YOUTUBE_REFRESH_TOKEN }}
+          TIKTOK_CLIENT_KEY: ${{ secrets.TIKTOK_CLIENT_KEY }}
+          TIKTOK_CLIENT_SECRET: ${{ secrets.TIKTOK_CLIENT_SECRET }}
+          TIKTOK_REFRESH_TOKEN: ${{ secrets.TIKTOK_REFRESH_TOKEN }}
+        run: |
+          python -m shorts mark --video-id "$VID" --status approved --note "approved in issue #$ISSUE"
+          : > /tmp/result.md
+          for platform in youtube tiktok; do
+            res=$(python -m shorts publish --video-id "$VID" --platform "$platform" --approved)
+            echo "$res"
+            echo "- **$platform**: \`$res\`" >> /tmp/result.md
+          done
+          gh issue comment "$ISSUE" --body-file /tmp/result.md
+          if grep -q '"dry_run": false' /tmp/result.md; then
+            gh release delete-asset review-queue "$VID.mp4" -y || true
+            gh release delete-asset review-queue "$VID-contact.jpg" -y || true
+            gh issue close "$ISSUE"
+          fi
+
+      - name: Save the pipeline's records
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/
+          git diff --cached --quiet && exit 0
+          git commit -m "Pipeline: ${LABEL} ${{ steps.ids.outputs.video }}"
+          git pull --rebase && git push

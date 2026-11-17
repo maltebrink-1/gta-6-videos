@@ -1,0 +1,39 @@
+name: Set up the pipeline
+description: Python 3.12, FFmpeg, Python packages and (optionally) the Kokoro voice model
+inputs:
+  voice:
+    description: Install the Kokoro voice (needed only for rendering)
+    default: "true"
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
+        cache: pip
+
+    - name: Install FFmpeg
+      shell: bash
+      run: |
+        if ! command -v ffmpeg >/dev/null; then
+          sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+        fi
+        ffmpeg -hide_banner -version | head -1
+
+    - name: Install Python packages
+      shell: bash
+      run: pip install -q -r requirements.txt
+
+    - name: Cache the Kokoro voice model (~340 MB, downloaded once)
+      if: inputs.voice == 'true'
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/gta6-shorts/models
+        key: kokoro-model-v1.0
+
+    - name: Install the Kokoro voice
+      if: inputs.voice == 'true'
+      shell: bash
+      run: |
+        pip install -q -r requirements-voice.txt
+        python -m shorts setup-voice

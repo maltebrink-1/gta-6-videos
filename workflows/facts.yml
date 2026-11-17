@@ -1,0 +1,90 @@
+name: Research & fact review
+
+# 1) Every 8 hours: look for new GTA 6 headlines and open a checklist issue.
+# 2) When YOU tick items in that issue and save it: add them to data/facts.yaml.
+on:
+  schedule:
+    - cron: "7 */8 * * *"
+  workflow_dispatch:
+  issues:
+    types: [edited]
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: pipeline
+  cancel-in-progress: false
+
+jobs:
+  discover:
+    if: github.event_name != 'issues'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+      HAS_CLAUDE: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN != '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+        with:
+          voice: "false"
+      - name: Install Claude Code (only if you added CLAUDE_CODE_OAUTH_TOKEN)
+        if: env.HAS_CLAUDE == 'true'
+        run: npm install -g @anthropic-ai/claude-code
+      - name: Find new headlines
+        id: d
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: python -m shorts discover --body-file /tmp/facts.md
+      - name: Open the fact-review issue
+        if: steps.d.outputs.new_candidates != '0'
+        run: |
+          gh label create fact-review --color 5319E7 --description "Tick the headlines that are true" --force
+          gh issue create --title "Fact review $(date -u +%Y-%m-%d\ %H:%M) – ${{ steps.d.outputs.new_candidates }} new headline(s)" \
+            --body-file /tmp/facts.md --label fact-review
+      - name: Save
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/
+          git diff --cached --quiet && exit 0
+          git commit -m "Research: new candidates"
+          git pull --rebase && git push
+
+  apply:
+    if: >-
+      github.event_name == 'issues' &&
+      contains(github.event.issue.labels.*.name, 'fact-review') &&
+      github.event.sender.login == github.repository_owner
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+      ISSUE: ${{ github.event.issue.number }}
+      ISSUE_BODY: ${{ github.event.issue.body }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+        with:
+          voice: "false"
+      - name: Add the ticked facts
+        id: a
+        run: |
+          printf '%s' "$ISSUE_BODY" > /tmp/body.md
+          python -m shorts apply-facts --issue-body /tmp/body.md
+          python -m shorts facts
+      - name: Save and confirm
+        if: steps.a.outputs.added != ''
+        env:
+          ADDED: ${{ steps.a.outputs.added }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/
+          git commit -m "Facts: added $ADDED"
+          git pull --rebase && git push
+          gh issue comment "$ISSUE" --body "Added to data/facts.yaml: \`$ADDED\`. They can be used from the next video."
