@@ -1,0 +1,341 @@
+# ─────────────────────────────────────────────────────────────────────────────
+#  VERIFIED FACTS DATABASE
+#  Every claim a video makes must point to an entry here (the verifier rejects
+#  scripts that state numbers or facts not found in their cited entries).
+#
+#  status:
+#    confirmed  – stated by Rockstar/Take-Two or an official storefront/platform.
+#                 May be narrated as plain fact.
+#    reported   – reputable press reporting or a company's own claim that needs
+#                 attribution. Narration must attribute it ("according to…",
+#                 "Rockstar says…", "reportedly…").
+#    rumor      – insiders/leakers, not confirmed. Narration must say so and the
+#                 video shows a RUMOR badge. Never used in titles.
+#    debunked   – a false claim. Only usable in "myth buster" videos, framed as false.
+#
+#  review_after_days: after this many days since verified_on the fact is
+#  "stale" and blocked until someone re-checks it and updates verified_on.
+#  valid_until: after this date the fact is retired automatically.
+#
+#  Seeded 2026-11-17 from the sources listed under each entry.
+# ─────────────────────────────────────────────────────────────────────────────
+
+facts:
+
+  # ── Release ───────────────────────────────────────────────────────────────
+  - id: release_date
+    claim: "Grand Theft Auto VI launches on Thursday, November 19, 2026."
+    short: "OUT NOVEMBER 19"
+    status: confirmed
+    topics: [release, countdown]
+    verified_on: 2026-11-17
+    review_after_days: 4
+    sources:
+      - name: Rockstar Newswire
+        url: https://www.rockstargames.com/newswire/article/ak3ak31a49a221/grand-theft-auto-vi-is-now-set-to-launch-november-19-2026
+        official: true
+      - name: Forbes (Nov 16, 2026)
+        url: https://www.forbes.com/sites/erikkain/2026/11/16/gta-6-release-date-time-ps5-xbox-series-x-download-size-day-one-update/
+
+  - id: release_time
+    claim: "Rockstar says GTA VI unlocks at midnight local time on November 19 in every region, on PS5 and Xbox Series X|S."
+    short: "MIDNIGHT LOCAL TIME"
+    status: confirmed
+    topics: [release, countdown]
+    verified_on: 2026-11-17
+    review_after_days: 4
+    valid_until: 2026-11-20
+    sources:
+      - name: Forbes (Nov 16, 2026)
+        url: https://www.forbes.com/sites/erikkain/2026/11/16/gta-6-release-date-time-ps5-xbox-series-x-download-size-day-one-update/
+      - name: Timesaver.gg (quotes Rockstar Support)
+        url: https://timesaver.gg/blog/gta-6-release-time-unlock-countdown-2026
+
+  - id: platforms
+    claim: "GTA VI launches on PlayStation 5 and Xbox Series X|S. A PC version has not been announced."
+    short: "PS5 + XBOX SERIES X|S"
+    status: confirmed
+    topics: [release, platforms]
+    verified_on: 2026-11-17
+    review_after_days: 14
+    sources:
+      - name: Forbes (May 12, 2026)
+        url: https://www.forbes.com/sites/brianmazique/2026/05/12/grand-theft-auto-6-release-date-and-everything-confirmed/
+      - name: Guru3D
+        url: https://guru3d.com/story/rockstar-opens-gta-vi-preorders-standard-edition-priced-at-in-europe/
+
+  - id: delay_history
+    claim: "GTA VI was delayed twice: from fall 2025 to May 26, 2026, and then to November 19, 2026."
+    short: "DELAYED TWICE"
+    status: confirmed
+    topics: [release, history]
+    verified_on: 2026-11-17
+    review_after_days: 365
+    sources:
+      - name: Forbes (May 12, 2026)
+        url: https://www.forbes.com/sites/brianmazique/2026/05/12/grand-theft-auto-6-release-date-and-everything-confirmed/
+      - name: TechRadar
+        url: https://www.techradar.com/gaming/grand-theft-auto-6-delayed-again-but-itll-still-ship-in-2026
+
+  - id: delay_reason
+    claim: "Rockstar said the extra months would let it finish GTA VI with the level of polish players expect."
+    short: "EXTRA POLISH"
+    status: confirmed
+    topics: [release, history]
+    verified_on: 2026-11-17
+    review_after_days: 365
+    sources:
+      - name: Rockstar Newswire
+        url: https://www.rockstargames.com/newswire/article/ak3ak31a49a221/grand-theft-auto-vi-is-now-set-to-launch-november-19-2026
+        official: true
+
+  # ── Price & editions ──────────────────────────────────────────────────────
+  - id: price_us
+    claim: "In the US, GTA VI costs $79.99 for the Standard Edition and $99.99 for the Ultimate Edition."
+    short: "$79.99 / $99.99"
+    status: confirmed
+    topics: [price]
+    verified_on: 2026-11-17
+    review_after_days: 30
+    sources:
+      - name: Game Informer (Jun 24, 2026)
+        url: https://gameinformer.com/2026/06/24/grand-theft-auto-vi-price-and-ultimate-edition-revealed-physical-version-will-not
+      - name: Neowin
+        url: https://www.neowin.net/amp/grand-theft-auto-vi-pricing-revealed-alongside-ultimate-edition-and-pre-loading-details/
+
+  - id: price_eu
+    claim: "In Europe, the Standard Edition costs €79.99 and the Ultimate Edition €99.99."
+    short: "€79.99 IN EUROPE"
+    status: confirmed
+    topics: [price]
+    verified_on: 2026-11-17
+    review_after_days: 30
+    sources:
+      - name: Guru3D
+        url: https://guru3d.com/story/rockstar-opens-gta-vi-preorders-standard-edition-priced-at-in-europe/
+
+  - id: preorders_opened
+    claim: "GTA VI pre-orders opened on June 25, 2026."
+    short: "PRE-ORDERS: JUNE 25"
+    status: confirmed
+    topics: [price, history]
+    verified_on: 2026-11-17
+    review_after_days: 365
+    sources:
+      - name: Game Informer (Jun 24, 2026)
+        url: https://gameinformer.com/2026/06/24/grand-theft-auto-vi-price-and-ultimate-edition-revealed-physical-version-will-not
+
+  - id: preorder_bonus
+    claim: "Pre-orders and purchases made before November 20 get the Vintage Vice City Pack, a throwback to 2002's GTA: Vice City."
+    short: "VINTAGE VICE CITY PACK"
+    status: confirmed
+    topics: [price, vice_city]
+    verified_on: 2026-11-17
+    review_after_days: 7
+    valid_until: 2026-11-20
+    sources:
+      - name: GosuGamers
+        url: https://www.gosugamers.net/entertainment/news/78674-rockstar-reveals-gta-vi-ultimate-edition-and-pre-order-bonuses-here-s-everything-you-need-to-know
+
+  - id: no_disc
+    claim: "The physical version of GTA VI does not include a disc."
+    short: "NO DISC IN THE BOX"
+    status: confirmed
+    topics: [price]
+    verified_on: 2026-11-17
+    review_after_days: 60
+    sources:
+      - name: Game Informer (Jun 24, 2026)
+        url: https://gameinformer.com/2026/06/24/grand-theft-auto-vi-price-and-ultimate-edition-revealed-physical-version-will-not
+
+  # ── World ─────────────────────────────────────────────────────────────────
+  - id: setting
+    claim: "GTA VI is set in the state of Leonida, home to Vice City."
+    short: "WELCOME TO LEONIDA"
+    status: confirmed
+    topics: [world]
+    verified_on: 2026-11-17
+    review_after_days: 365
+    sources:
+      - name: Forbes (May 12, 2026)
+        url: https://www.forbes.com/sites/brianmazique/2026/05/12/grand-theft-auto-6-release-date-and-everything-confirmed/
+
+  - id: six_regions
+    claim: "Rockstar has revealed six regions of Leonida: Vice City, the Leonida Keys, Grassrivers, Port Gellhorn, Ambrosia and Mount Kalaga National Park."
+    short: "6 REGIONS"
+    status: confirmed
+    topics: [world, regions]
+    verified_on: 2026-11-17
+    review_after_days: 365
+    sources:
+      - name: GosuGamers
+        url: https://www.gosugamers.net/entertainment/news/74895-gta-vi-major-locations-revealed-vice-city-leonida-keys-grassrivers-and-more
+      - name: FandomWire
+        url: https://fandomwire.com/gta-6-all-officially-confirmed-locations-ranked/
+
+  - id: florida_inspiration
+    claim: "Leonida is widely described as Rockstar's take on Florida: the Leonida Keys echo the Florida Keys and Grassrivers echoes the Everglades."
+    short: "INSPIRED BY FLORIDA?"
+    status: reported
+    topics: [world, regions]
+    verified_on: 2026-11-17
+    review_after_days: 365
+    sources:
+      - name: Guru3D
+        url: https://www.guru3d.com/story/gta-vi-map-will-be-twice-the-size-of-gta-v-rockstar-says/
+      - name: Local 12
+        url: https://local12.com/news/offbeat/rockstar-games-grand-theft-auto-vi-brings-series-back-florida-inspired-vice-city-leonida-everglades-miami-florida-keys-wetland-video-game-xbox-playstation-jason-duval-lucia-caminos
+
+  - id: region_keys
+    claim: "The Leonida Keys are a tropical island chain in Leonida."
+    short: "THE LEONIDA KEYS"
+    status: confirmed
+    topics: [regions]
+    verified_on: 2026-11-17
+    review_after_days: 365
+    sources:
+      - name: ConsolePulse
+        url: https://consolepulse.com/multiplatform/gta/guides/gta-6-vice-city-leonida-locations-guide
+
+  - id: region_grassrivers
+    claim: "Grassrivers is Leonida's swamp and wetland region."
+    short: "GRASSRIVERS"
+    status: confirmed
+    topics: [regions]
+    verified_on: 2026-11-17
+    review_after_days: 365
+    sources:
+      - name: Local 12
+        url: https://local12.com/news/offbeat/rockstar-games-grand-theft-auto-vi-brings-series-back-florida-inspired-vice-city-leonida-everglades-miami-florida-keys-wetland-video-game-xbox-playstation-jason-duval-lucia-caminos
+
+  - id: region_port_gellhorn
+    claim: "Port Gellhorn is a faded coastal vacation town full of cheap motels and aging strip malls."
+    short: "PORT GELLHORN"
+    status: confirmed
+    topics: [regions]
+    verified_on: 2026-11-17
+    review_after_days: 365
+    sources:
+      - name: Guru3D
+        url: https://www.guru3d.com/story/gta-vi-map-will-be-twice-the-size-of-gta-v-rockstar-says/
+      - name: FandomWire
+        url: https://fandomwire.com/gta-6-all-officially-confirmed-locations-ranked/
+
+  - id: region_ambrosia
+    claim: "Ambrosia is Leonida's industrial heartland, built around sugar production."
+    short: "AMBROSIA"
+    status: confirmed
+    topics: [regions]
+    verified_on: 2026-11-17
+    review_after_days: 365
+    sources:
+      - name: ConsolePulse
+        url: https://consolepulse.com/multiplatform/gta/guides/gta-6-vice-city-leonida-locations-guide
+      - name: Guru3D
+        url: https://www.guru3d.com/story/gta-vi-map-will-be-twice-the-size-of-gta-v-rockstar-says/
+
+  - id: region_kalaga
+    claim: "Mount Kalaga National Park sits on Leonida's northern border, with hunting, fishing and wild backcountry."
+    short: "MOUNT KALAGA"
+    status: confirmed
+    topics: [regions]
+    verified_on: 2026-11-17
+    review_after_days: 365
+    sources:
+      - name: FandomWire
+        url: https://fandomwire.com/gta-6-all-officially-confirmed-locations-ranked/
+
+  # ── Characters ────────────────────────────────────────────────────────────
+  - id: protagonists
+    claim: "GTA VI has two playable leads: Lucia Caminos and Jason Duval."
+    short: "LUCIA + JASON"
+    status: confirmed
+    topics: [characters]
+    verified_on: 2026-11-17
+    review_after_days: 365
+    sources:
+      - name: Forbes (May 12, 2026)
+        url: https://www.forbes.com/sites/brianmazique/2026/05/12/grand-theft-auto-6-release-date-and-everything-confirmed/
+
+  # ── Trailers & records ────────────────────────────────────────────────────
+  - id: trailer1_record
+    claim: "GTA VI Trailer 1, released in December 2023, got more than 93 million YouTube views in its first 24 hours, a record for a non-music video debut."
+    short: "93 MILLION IN 24 HOURS"
+    status: confirmed
+    topics: [trailers, records]
+    verified_on: 2026-11-17
+    review_after_days: 365
+    sources:
+      - name: YouTube Trends
+        url: https://www.youtube.com/trends/articles/grand-theft-auto-vi-trailer-new-record
+        official: true
+      - name: GameSpot
+        url: https://www.gamespot.com/articles/gta-6s-trailer-had-the-biggest-youtube-debut-ever/1100-6519788/
+
+  - id: trailer2_views
+    claim: "Rockstar says Trailer 2, released on May 6, 2025, was viewed more than 475 million times across platforms in 24 hours."
+    short: "475 MILLION VIEWS"
+    status: reported
+    topics: [trailers, records]
+    verified_on: 2026-11-17
+    review_after_days: 365
+    sources:
+      - name: Video Games Chronicle
+        url: https://www.videogameschronicle.com/news/at-nearly-half-a-billion-views-rockstar-says-gta-6s-new-trailer-is-the-biggest-video-launch-of-all-time
+      - name: TechRadar
+        url: https://www.techradar.com/gaming/the-latest-grand-theft-auto-6-trailer-has-set-a-major-record-by-racking-up-475-million-views-in-just-24-hours
+
+  - id: extended_look
+    claim: "Rockstar released GTA VI: An Extended Look on August 27, 2026, showing about 20 minutes of gameplay."
+    short: "20 MINUTES OF GAMEPLAY"
+    status: confirmed
+    topics: [trailers]
+    verified_on: 2026-11-17
+    review_after_days: 365
+    sources:
+      - name: GamesRadar+
+        url: https://www.gamesradar.com/gta-6-guide/
+      - name: Rockstar Report
+        url: https://rockstarreport.com/features/gta-6-release-date-tracker
+
+  # ── History ───────────────────────────────────────────────────────────────
+  - id: vice_city_2002
+    claim: "Grand Theft Auto: Vice City first came out in 2002."
+    short: "VICE CITY, 2002"
+    status: confirmed
+    topics: [history, vice_city]
+    verified_on: 2026-11-17
+    review_after_days: 3650
+    sources:
+      - name: GosuGamers
+        url: https://www.gosugamers.net/entertainment/news/78674-rockstar-reveals-gta-vi-ultimate-edition-and-pre-order-bonuses-here-s-everything-you-need-to-know
+      - name: Wikipedia
+        url: https://en.wikipedia.org/wiki/Grand_Theft_Auto:_Vice_City
+
+  # ── Rumours (always labelled) ─────────────────────────────────────────────
+  - id: review_embargo
+    claim: "Insiders report that GTA VI reviews go live on November 18, 2026, one day before launch. Rockstar has not confirmed this."
+    short: "REVIEWS NOV 18?"
+    status: rumor
+    topics: [release, countdown, reviews]
+    verified_on: 2026-11-17
+    review_after_days: 1
+    valid_until: 2026-11-19
+    sources:
+      - name: Beebom (citing NateTheHate / Insider Gaming)
+        url: https://beebom.com/gta-6-review-embargo-date-revealed/
+      - name: 25YL
+        url: https://25yearslatersite.com/gaming/news/gta-6-reviews-reportedly-land-nov-18-a-day-before-launch/
+
+  # ── Myths (debunked claims, only for myth-buster videos) ──────────────────
+  - id: myth_pc_day_one
+    claim: "GTA VI launches on PC on day one."
+    short: "PC ON DAY ONE?"
+    status: debunked
+    rebuttal: platforms
+    topics: [myths, platforms]
+    verified_on: 2026-11-17
+    review_after_days: 14
+    sources:
+      - name: Forbes (May 12, 2026)
+        url: https://www.forbes.com/sites/brianmazique/2026/05/12/grand-theft-auto-6-release-date-and-everything-confirmed/

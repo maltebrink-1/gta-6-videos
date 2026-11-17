@@ -1,0 +1,13 @@
+# Only tracks listed here (and present in this folder) are ever used, and only
+# when settings.yaml has  music.mode: licensed
+# Each track needs a licence that allows use in monetised YouTube AND TikTok videos.
+#
+# tracks:
+#   - file: my-track.mp3
+#     title: "Track title"
+#     artist: "Artist"
+#     license: "CC BY 4.0"               # or the licence name/terms you agreed to
+#     url: "https://where-you-got-it"
+#     attribution: "Music: Track title by Artist (CC BY 4.0)"   # added to descriptions if set
+#     allowed_platforms: [youtube, tiktok]
+tracks: []
