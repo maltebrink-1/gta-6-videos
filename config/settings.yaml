@@ -1,0 +1,96 @@
+# ─────────────────────────────────────────────────────────────────────────────
+#  GTA 6 Shorts Automation — main settings
+#  Safe to edit from the GitHub web UI (pencil icon). Every run reads this file.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# 1 = foundation, 2 = testing (NOTHING is published), 3 = publish only after you
+# add the "approved" label to a review issue, 4 = full automation (auto-publish
+# after all checks pass, within the daily caps below).
+stage: 2
+
+channel:
+  name: "Leonida Daily"          # small tag shown in every video – change to your channel name
+  handle: "@yourchannel"
+  disclaimer: "Fan-made channel. Not affiliated with or endorsed by Rockstar Games or Take-Two Interactive."
+
+schedule:
+  videos_per_run: 1              # videos made each time the create workflow runs
+  max_videos_per_day: 2          # hard cap, protects against "mass-produced" signals
+
+video:
+  width: 1080
+  height: 1920
+  fps: 30
+  min_seconds: 20
+  max_seconds: 60
+  crf: 19                        # lower = better quality, bigger file
+  preset: veryfast
+
+voice:
+  engine: auto                   # auto | kokoro | flite   (auto = Kokoro if installed, else Flite)
+  kokoro_voice: "af_bella"       # a blend works too, e.g. "af_bella:60,af_heart:40"
+  speed: 1.1                     # 1.0 = normal, 1.1–1.2 = energetic
+  flite_voice: slt               # test-only fallback voice
+  gap_between_scenes: 0.12       # seconds of breath between scenes
+
+captions:
+  max_words_per_chunk: 3
+  style: auto                    # auto | pop | box | clean
+
+music:
+  mode: procedural               # off | procedural (original, generated) | licensed (see assets/music/LICENSES.yaml)
+  volume_db: -15                 # music level relative to the voice (dB); it also dips while the voice talks
+
+writer:
+  # Tried in order until one returns a script that passes every check.
+  # "template" needs no account and always works, but is the least varied.
+  providers: [claude_cli, groq, gemini, template]
+  temperature: 0.9
+  claude_model: ""               # empty = Claude Code's default model
+  groq_model: "llama-3.3-70b-versatile"
+  gemini_model: "gemini-2.5-flash"
+  max_attempts_per_provider: 2
+
+research:
+  news_lookback_hours: 36
+  require_human_approval_for_new_facts: true
+  auto_approve_official_sources: false   # true = Rockstar/Take-Two items skip your review
+
+originality:
+  max_similarity: 0.35           # 0–1, word-trigram overlap with any recent script
+  history_window: 60             # how many past scripts to compare against
+  hook_cooldown: 20              # a hook pattern can't repeat within this many videos
+  format_cooldown: 2             # same format can't run twice in a row
+
+qc:
+  target_lufs: -14
+  lufs_tolerance: 2.0
+  max_true_peak_db: -1.0
+  max_silence_seconds: 1.2
+  max_black_seconds: 0.4
+
+publishing:
+  enabled: false                 # master switch – stays false until Stage 3
+  require_approval: true         # Stage 3 behaviour; Stage 4 sets this to false
+  dry_run: true                  # true = log what would be uploaded, upload nothing
+  youtube:
+    enabled: false
+    privacy: private             # use private for the first tests, then public
+    category_id: "20"            # 20 = Gaming
+    contains_synthetic_media: false
+    made_for_kids: false
+    tags: [GTA 6, GTA VI, Grand Theft Auto VI, Vice City, Leonida, Rockstar Games]
+  tiktok:
+    enabled: false               # needs an approved TikTok developer app
+    mode: inbox                  # inbox = draft you finish in the TikTok app | direct = needs audited app
+    is_aigc: true                # TikTok "AI-generated" label
+
+reports:
+  post_issue: true               # daily report as a GitHub issue (you get it by e-mail/app notification)
+
+limits:                          # free-tier ceilings watched by the usage monitor
+  youtube_uploads_per_day: 100
+  youtube_units_per_day: 10000
+  llm_requests_per_day: 40
+  actions_minutes_per_month: 2000  # only applies to PRIVATE repos (public repos: unlimited)
+  warn_at_percent: 70

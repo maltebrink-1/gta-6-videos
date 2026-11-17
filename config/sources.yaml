@@ -1,0 +1,40 @@
+# Where the system looks for new GTA 6 topics. All free, no API keys.
+# News items never become "facts" automatically: they go to a review issue
+# where you tick the ones you trust (see docs/OPERATIONS.md).
+
+feeds:
+  - name: Rockstar official (via Google News)
+    url: "https://news.google.com/rss/search?q=site:rockstargames.com+%22Grand+Theft+Auto+VI%22&hl=en-US&gl=US&ceid=US:en"
+    official: true
+  - name: GTA 6 news (Google News)
+    url: "https://news.google.com/rss/search?q=%22GTA+6%22+OR+%22Grand+Theft+Auto+VI%22+when:2d&hl=en-US&gl=US&ceid=US:en"
+    official: false
+
+# Domains treated as official first-party sources.
+official_domains:
+  - rockstargames.com
+  - take2games.com
+  - take2.com
+
+# Outlets accepted as "reported" sources (reputable press). Anything else is
+# treated as rumour until confirmed.
+trusted_press_domains:
+  - ign.com
+  - gamespot.com
+  - eurogamer.net
+  - gameinformer.com
+  - polygon.com
+  - theverge.com
+  - videogameschronicle.com
+  - forbes.com
+  - techradar.com
+  - pcgamer.com
+  - gamesradar.com
+  - bloomberg.com
+  - reuters.com
+
+# Words that make a headline relevant.
+keywords: ["gta 6", "gta vi", "grand theft auto vi", "grand theft auto 6", "leonida", "vice city"]
+
+# Headlines with these words are skipped (scams, piracy, leaks of footage).
+blocked_keywords: ["free download", "apk", "crack", "torrent", "mod menu", "leaked footage", "leaked gameplay"]
